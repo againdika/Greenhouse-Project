@@ -4,6 +4,8 @@
 > **ESP32 edge sensors → FOG local server → Azure cloud**  
 > Automated climate monitoring and relay control for Chile pepper cultivation — Galle, Sri Lanka
 
+![System Architecture](https://github.com/user-attachments/assets/56e4ab67-e905-4e77-8d19-8efcdb299ba6)
+
 ---
 
 ## Table of Contents
