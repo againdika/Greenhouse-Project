@@ -1,0 +1,82 @@
+/*
+CREATE DATABASE IF NOT EXISTS greenhouse
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE greenhouse;
+
+-- Edge device registry
+CREATE TABLE IF NOT EXISTS edge_devices (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    device_id     VARCHAR(40)  NOT NULL UNIQUE,
+    display_name  VARCHAR(100) NOT NULL,
+    location_desc VARCHAR(255) DEFAULT NULL,
+    api_key       VARCHAR(64)  NOT NULL,
+    is_active     TINYINT(1)   NOT NULL DEFAULT 1,
+    registered_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen     DATETIME     DEFAULT NULL,
+    last_ip       VARCHAR(45)  DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Sensor + dual relay log
+-- CH1 = sprinkler pump (humidity)   motor_on / motor_run_sec / motor_pending_sec
+-- CH2 = cooling fan   (temperature) ch2_on   / ch2_run_sec   / ch2_pending_sec
+-- trigger = "none" | "humidity" | "temperature" | "both"
+CREATE TABLE IF NOT EXISTS sensor_log (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    device_id        VARCHAR(40)  DEFAULT 'DEFAULT',
+    recorded_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    temperature      DECIMAL(5,2) NOT NULL,
+    humidity         DECIMAL(5,2) NOT NULL,
+    gas              INT          NOT NULL,
+    temp_status      ENUM('NORMAL','WARNING','DANGER') NOT NULL DEFAULT 'NORMAL',
+    hum_status       ENUM('NORMAL','WARNING','DANGER') NOT NULL DEFAULT 'NORMAL',
+    gas_status       ENUM('NORMAL','WARNING','DANGER') NOT NULL DEFAULT 'NORMAL',
+    motor_on         TINYINT(1)   NOT NULL DEFAULT 0,
+    motor_run_sec    INT          NOT NULL DEFAULT 0,
+    motor_pending_sec INT         NOT NULL DEFAULT 0,
+    ch2_on           TINYINT(1)   NOT NULL DEFAULT 0,
+    ch2_run_sec      INT          NOT NULL DEFAULT 0,
+    ch2_pending_sec  INT          NOT NULL DEFAULT 0,
+    trigger_reason   VARCHAR(16)  NOT NULL DEFAULT 'none',
+    source           ENUM('esp32','manual') NOT NULL DEFAULT 'esp32',
+    notes            VARCHAR(255) DEFAULT NULL,
+    INDEX idx_recorded_at  (recorded_at),
+    INDEX idx_device_id    (device_id),
+    INDEX idx_temp_status  (temp_status),
+    INDEX idx_hum_status   (hum_status),
+    INDEX idx_gas_status   (gas_status),
+    INDEX idx_motor_on     (motor_on),
+    INDEX idx_ch2_on       (ch2_on)
+) ENGINE=InnoDB;
+
+-- Users
+CREATE TABLE IF NOT EXISTS users (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    username   VARCHAR(60)  NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    role       ENUM('owner','helper') NOT NULL DEFAULT 'helper',
+    full_name  VARCHAR(100) DEFAULT NULL,
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO edge_devices (device_id, display_name, location_desc, api_key)
+VALUES ('ESP32-ZONE-A', 'Zone A — Main Sensor', 'Primary greenhouse sensor node', 'gh_secret_key_2024');
+
+-- ── If sensor_log already exists, run ONLY these ALTER statements ──
+-- (Do NOT run the CREATE TABLE above if the table already exists)
+--
+-- ALTER TABLE sensor_log
+--   ADD COLUMN motor_on          TINYINT(1)  NOT NULL DEFAULT 0   AFTER gas_status,
+--   ADD COLUMN motor_run_sec     INT         NOT NULL DEFAULT 0   AFTER motor_on,
+--   ADD COLUMN motor_pending_sec INT         NOT NULL DEFAULT 0   AFTER motor_run_sec,
+--   ADD COLUMN ch2_on            TINYINT(1)  NOT NULL DEFAULT 0   AFTER motor_pending_sec,
+--   ADD COLUMN ch2_run_sec       INT         NOT NULL DEFAULT 0   AFTER ch2_on,
+--   ADD COLUMN ch2_pending_sec   INT         NOT NULL DEFAULT 0   AFTER ch2_run_sec,
+--   ADD COLUMN trigger_reason    VARCHAR(16) NOT NULL DEFAULT 'none' AFTER ch2_pending_sec,
+--   ADD INDEX  idx_motor_on  (motor_on),
+--   ADD INDEX  idx_ch2_on    (ch2_on);
+--
+-- If you also need to add device_id (older installs):
+-- ALTER TABLE sensor_log
+--   ADD COLUMN device_id VARCHAR(40) DEFAULT 'DEFAULT' AFTER id,
+--   ADD INDEX idx_device_id (device_id);
+*/
